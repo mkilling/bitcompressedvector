@@ -14,7 +14,7 @@ gen:
 	python generate.py >> mask.h
 
 profile:
-	$(CC) -O3 -o $(BUILD_DIR)/main_opt main.cpp -g2 -DNDEBUG -lprofiler
+	$(CC) -O3 -o $(BUILD_DIR)/main_opt main.cpp -g2 -msse4.1 -DNDEBUG -lprofiler
 	CPUPROFILE_FREQUENCY=1000 CPUPROFILE=/tmp/bcv.prof ./$(BUILD_DIR)/main_opt 100000000
 	pprof --pdf ./$(BUILD_DIR)/main_opt /tmp/bcv.prof > bcv.pdf
 
