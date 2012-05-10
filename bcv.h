@@ -355,9 +355,10 @@ typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(co
     data_t bounds = _width - offset; // This is almost static expression, that could be handled with a switch case
 
     mask = global_bit_masks[B];
-    mask <<= offset;
+    data_t block = _data[pos];
+    block >>= offset;
 
-    result = (mask & _data[pos]) >> offset;
+    result = (mask & block);
 
     if (bounds < B)
     {
