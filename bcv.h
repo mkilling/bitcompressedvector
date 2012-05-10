@@ -237,9 +237,6 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
     // Base Mask
     data_t baseMask = global_bit_masks[B];
 
-    // Counter and block
-    size_t counter = 0;
-
     // Align the block according to the offset
     data_t block = _data[pos] >>  offset;
 
@@ -247,7 +244,8 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
     size_t current = (pos * _width + offset) / B;
     size_t upper = left < (_reserved - current) ? left : _reserved - current;
 
-    while(counter < upper)
+    size_t counter = 0;
+    for( ; counter < upper; ++counter)
     {
 
         // Extract the value
@@ -270,7 +268,7 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
         }
 
         // Append current value
-        data[counter++] = currentValue;
+        data[counter] = currentValue;
     }
 
     *actual = counter;
@@ -299,19 +297,18 @@ void BitCompressedVector<T, B>::mget_fixed(const size_t index, value_type_ptr da
         // Extract the value
         currentValue = (baseMask & block);
 
-        if (!(bounds > B))
-        {
-            offset = B - bounds;
-            block = _data[++pos];
-            currentValue |= (global_bit_masks[offset] & block) << bounds;
-
-            // Assign new block
-            block >>= offset;
-            bounds = _width - offset;
-        } else
+        if (bounds > B)
         {
             bounds -= B;
             block >>= B;
+        } else {
+            offset = B - bounds;
+            data_t mask = global_bit_masks[offset];
+            currentValue |= (mask & _data[++pos]) << bounds;
+
+            // Assign new block
+            block = _data[pos] >> offset;
+            bounds = _width - offset;
         }
 
         // Append current value
