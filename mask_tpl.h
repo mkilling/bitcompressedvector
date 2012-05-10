@@ -17,5 +17,5 @@ struct CreateMask
 
 		return result;
 	}
-	
+
 };

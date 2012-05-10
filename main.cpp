@@ -24,19 +24,19 @@ void pshufb_test(long SIZE)
     //v1 = 0..4, v2 = 5..9, v3 = 10..14, v4=15..19
 
     // two byte is the max copy for this element sie of 5 bit
-    // 1,2 ->  0,1   clear 2 3 offset 0, mask 5 
-    // 1,2 ->  4,5   clear 6 7 offset 5, mask 5 
+    // 1,2 ->  0,1   clear 2 3 offset 0, mask 5
+    // 1,2 ->  4,5   clear 6 7 offset 5, mask 5
     // 2,3 ->  8,9   clear 10,11 offset 2 bit, mask 5
     // 2,3 ->  12,13 clear 14,15 offset 7 bit, mask 5
-    mask = _mm_set_epi8( 
-                        0x80, 0x80, 
-                        0x02, 0x01,
-                        0x80, 0x80, 
+    mask = _mm_set_epi8(
+                        0x80, 0x80,
                         0x02, 0x01,
                         0x80, 0x80,
-                        0x01, 0x00, 
+                        0x02, 0x01,
                         0x80, 0x80,
-                        0x01, 0x00                        
+                        0x01, 0x00,
+                        0x80, 0x80,
+                        0x01, 0x00
                         );
 
     // Shuffle
@@ -89,7 +89,7 @@ void test_get(long SIZE)
     for(size_t i=0; i < SIZE; ++i)
     {
         int a = i % (1UL << BITS);
-        v.set(i, a);        
+        v.set(i, a);
     }
 
     for(size_t i=0; i < SIZE; ++i)
@@ -108,14 +108,14 @@ void test_mget(long SIZE)
     for(size_t i=0; i < SIZE; ++i)
     {
         int a = i % (1UL << BITS);
-        v.set(i, a);        
+        v.set(i, a);
         sum += a;
     }
 
     size_t alloca = ((64 / BITS)+1) * 8;
     int *tmp = (int*) malloc(sizeof(int) * alloca);
 
-    for(size_t i=0; i < SIZE; )       
+    for(size_t i=0; i < SIZE; )
     {
         size_t actual = 0;
         v.mget(i, (int*) tmp, &actual);
@@ -126,8 +126,8 @@ void test_mget(long SIZE)
 
             assert(a == tmp[j]);
         }
-        
-        
+
+
 
     }
     free(tmp);
@@ -143,24 +143,24 @@ void test_mget_fixed(long SIZE)
     for(size_t i=0; i < SIZE; ++i)
     {
         int a = i % (1UL << BITS);
-        v.set(i, a);        
+        v.set(i, a);
         sum += a;
     }
 
     int *tmp = (int*) malloc(sizeof(int) * 20);
 
-    for(size_t i=0; i < SIZE; )       
+    for(size_t i=0; i < SIZE; )
     {
         size_t actual = 16;
         v.mget_fixed(i, tmp, &actual);
-        
+
         for(size_t j=0; j < actual; ++j)
             sum2 += tmp[j];
         i += actual;
 
     }
     free(tmp);
-    
+
     assert(sum == sum2);
     std::cout << " OK" << std::endl;
 }
@@ -173,18 +173,18 @@ void test_mget_fixed2(long SIZE)
     for(size_t i=0; i < SIZE; ++i)
     {
         int a = i % (1UL << BITS);
-        v.set(i, a);        
+        v.set(i, a);
         sum += a;
     }
 
     int *tmp = (int*) malloc(sizeof(int) * 20);
     memset(tmp, 0, 20);
 
-    for(size_t i=0; i < SIZE; )       
+    for(size_t i=0; i < SIZE; )
     {
         size_t actual = 16;
         v.mget_fixed2(i, tmp, &actual);
-        
+
         for(size_t j=0; j < actual; ++j)
             sum2 += tmp[j];
         i += actual;
@@ -219,9 +219,9 @@ void performance(size_t size)
 
     ///////////////////////////////////////////////////////////////////////////
     t.start();
-    for(size_t i=0; i < size; i+=1)  
+    for(size_t i=0; i < size; i+=1)
     {
-        res += v.get(i);                
+        res += v.get(i);
     }
     t.stop();
     std::cout << res << " get time " << (a = t.elapsed_time()) << std::endl;
@@ -229,9 +229,9 @@ void performance(size_t size)
     ///////////////////////////////////////////////////////////////////////////
     res = 0;
     t.start();
-    for(size_t i=0; i < size; i+=1)  
+    for(size_t i=0; i < size; i+=1)
     {
-        res += v[i];                
+        res += v[i];
     }
     t.stop();
     std::cout << res << " get[] time " << (b = t.elapsed_time()) << std::endl;
@@ -245,13 +245,13 @@ void performance(size_t size)
     size_t actual;
     t.start();
     //int flags = PapiTracer::start();
-    for(size_t i=0; i < size; )       
+    for(size_t i=0; i < size; )
     {
         actual = 0;
         v.mget(i, tmp, &actual);
         for(size_t j=0; j < actual; ++j)
             res += tmp[j];
-        
+
         i += actual;
 
     }
@@ -266,11 +266,11 @@ void performance(size_t size)
     res = 0;
     t.start();
     actual = 0;
-    for(size_t i=0; i < size; i+= 16)       
-    {        
+    for(size_t i=0; i < size; i+= 16)
+    {
         actual = 16;
         v.mget_fixed(i, tmp, &actual);
-        
+
         res += tmp[0];
         res += tmp[1];
         res += tmp[2];
@@ -298,11 +298,11 @@ void performance(size_t size)
     res = 0;
     t.start();
     actual = 0;
-    for(size_t i=0; i < size; i+= 16)       
-    {        
+    for(size_t i=0; i < size; i+= 16)
+    {
         actual = 16;
         v.mget_fixed2(i, tmp, &actual);
-        
+
         res += tmp[0];
         res += tmp[1];
         res += tmp[2];
@@ -328,7 +328,7 @@ void performance(size_t size)
     ///////////////////////////////////////////////////////////////////////////
     res = 0;
     t.start();
-    for(size_t i=0; i < size; i+=16)  
+    for(size_t i=0; i < size; i+=16)
     {
         res += v2[i];
         res += v2[i+1];

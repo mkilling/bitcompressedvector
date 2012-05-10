@@ -33,7 +33,7 @@
 BUILD_MASK_HEADER;
 /*
 
- This class provides a numeric bit compressed vector. 
+ This class provides a numeric bit compressed vector.
  Basically it provides a drop-in replacement for the standard std::vector. However,
  the number of bits allocated per value cannot be changed afterwards.
 
@@ -42,7 +42,7 @@ BUILD_MASK_HEADER;
 template<typename T, uint8_t B>
 class BitCompressedVector
 {
-	
+
 public:
 
 	typedef T   value_type;
@@ -54,7 +54,7 @@ public:
 	* Constructor
 	*/
 	BitCompressedVector(size_t size): _reserved(size)
-	{		
+	{
 		_allocated_blocks = (size * B) / (sizeof(data_t) * 8) + 1;
 		posix_memalign((void**) &_data, 64, _allocated_blocks * sizeof(data_t));
         memset(_data, 0, _allocated_blocks * sizeof(data_t));
@@ -71,7 +71,7 @@ public:
 	inline value_type get(const size_t index) const;
 
 
-    /* 
+    /*
 
     This method returns a list of extracted values from the vector.The number
     of elements is variadic end depends on the number of elements inside a
@@ -83,7 +83,7 @@ public:
     inline void mget(const size_t index, value_type_ptr data, size_t *actual) const;
 
     /*
-    This method is similar to mget(), however the number of elements extracted 
+    This method is similar to mget(), however the number of elements extracted
     is limited externally, and not by the size of the block inside the compressed
     vector.
 
@@ -100,11 +100,11 @@ public:
 	 */
 	inline void set(const size_t index, const value_type v);
 
-    
+
 
 
     /*
-        This small class is a simple proxy class that let's us handle reference 
+        This small class is a simple proxy class that let's us handle reference
         values to indizes in the bitvector without actually having a direct reference
     */
     struct BitVectorProxy
@@ -116,7 +116,7 @@ public:
         {}
 
         // Implicit conversion operator used for rvalues of T
-        inline operator const T () const 
+        inline operator const T () const
         {
             return _vector->get(_index);
         }
@@ -144,7 +144,7 @@ public:
     }
 
 
-    
+
 
 
 private:
@@ -152,7 +152,7 @@ private:
 
 	typedef uint8_t byte;
 	typedef uint64_t data_t;
-    
+
     // function pointer helper
     typedef data_t (*mask_fun_ptr)(void);
 
@@ -200,8 +200,8 @@ void BitCompressedVector<T, B>::mget_fixed2(const size_t index, value_type_ptr d
     data_t currentValue;
 
     // Base Mask, masks the lowest bits according to B
-    const data_t baseMask = global_bit_masks[B];    
-    
+    const data_t baseMask = global_bit_masks[B];
+
     size_t upper = index + *limit;
     size_t mempos = 0;
     for(size_t counter = index; counter < upper; ++counter)
@@ -213,7 +213,7 @@ void BitCompressedVector<T, B>::mget_fixed2(const size_t index, value_type_ptr d
         // base expression
         size_t bounds = _width - offset;
         data_t val = BRANCH_FREE_LT(bounds,B);
-        
+
         // Reduce Branch
         data[mempos++] |= val * ((_data[pos + 1] & global_bit_masks[B - bounds]) << bounds);
 
@@ -235,13 +235,13 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
     data_t bounds = _width - offset;
 
     // Base Mask
-    data_t baseMask = global_bit_masks[B];    
-    
+    data_t baseMask = global_bit_masks[B];
+
     // Counter and block
     size_t counter = 0;
-    
+
     // Align the block according to the offset
-    data_t block = _data[pos] >>  offset;    
+    data_t block = _data[pos] >>  offset;
 
     size_t left = (_num_blocks * _width) / B;
     size_t current = (pos * _width + offset) / B;
@@ -255,7 +255,7 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
 
         if (bounds > B)
         {
-            bounds -= B;            
+            bounds -= B;
             block >>= B;
 
         } else {
@@ -266,11 +266,11 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
 
             // Assign new block
             block = _data[pos] >> offset;
-            bounds = _width - offset;            
-        } 
-        
+            bounds = _width - offset;
+        }
+
         // Append current value
-        data[counter++] = currentValue;        
+        data[counter++] = currentValue;
     }
 
     *actual = counter;
@@ -288,10 +288,10 @@ void BitCompressedVector<T, B>::mget_fixed(const size_t index, value_type_ptr da
     data_t bounds = _width - offset;
 
     // Base Mask
-    const data_t baseMask = global_bit_masks[B];    
-    
+    const data_t baseMask = global_bit_masks[B];
+
     // Align the block according to the offset
-    data_t block = _data[pos] >>  offset;    
+    data_t block = _data[pos] >>  offset;
 
     size_t upper = *limit;
     for(size_t counter = 0; counter < upper; ++counter)
@@ -307,13 +307,13 @@ void BitCompressedVector<T, B>::mget_fixed(const size_t index, value_type_ptr da
 
             // Assign new block
             block >>= offset;
-            bounds = _width - offset;            
-        } else 
+            bounds = _width - offset;
+        } else
         {
-            bounds -= B;            
+            bounds -= B;
             block >>= B;
         }
-        
+
         // Append current value
         data[counter] = currentValue;
     }
@@ -325,17 +325,17 @@ void BitCompressedVector<T, B>::set(const size_t index, const value_type v)
 	data_t pos = _getPos(index);
 	data_t offset = _getOffset(index, pos * _width);
 	data_t bounds = _width - offset;
-	
+
     data_t mask, baseMask;
     baseMask = global_bit_masks[B];
     mask = ~(baseMask << offset);
-    
 
-	_data[pos] &= mask; 
+
+	_data[pos] &= mask;
 	_data[pos] = _data[pos] | ((data_t) v << offset);
 
 	if (bounds < B)
-	{        
+	{
         mask = ~(baseMask << offset); // we have a an overflow here thatswhy we do not need to care about the original stuff
 
 	   _data[pos + 1] &= mask; // clear bits
@@ -353,7 +353,7 @@ typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(co
 	data_t pos = _getPos(index);
 	data_t offset = _getOffset(index, pos * _width);
 	data_t bounds = _width - offset; // This is almost static expression, that could be handled with a switch case
-	
+
     mask = global_bit_masks[B];
     mask <<= offset;
 
@@ -365,6 +365,6 @@ typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(co
         mask = global_bit_masks[b];
 
 		result |= (mask & _data[pos + 1]) << bounds;
-	} 
+	}
 	return result;
 }

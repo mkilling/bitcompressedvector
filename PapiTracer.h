@@ -29,7 +29,7 @@ struct PapiTracer
 
     static int start(std::string eventName = "PAPI_TOT_INS")
     {
-      
+
         if (eventName.compare("NO_PAPI") == 0)
             return -1;
 
@@ -50,12 +50,12 @@ struct PapiTracer
 
 		initialized = true;
 	}
-        
+
         if (PAPI_thread_init(pthread_self) != PAPI_OK)
             throw runtime_error("PAPI could not initialize thread");
 
         int retval;
-        
+
         // Create the event set
         int eventSet = PAPI_NULL;
         if ((retval = PAPI_create_eventset(&eventSet)) != PAPI_OK)

@@ -6,7 +6,7 @@ def generate_create_mask(bits):
 	for b in range(1, bits + 1):
 		buf += """
 
-	
+
 template<>
 struct CreateMask<%d>
 {
@@ -14,14 +14,14 @@ struct CreateMask<%d>
     static inline uint64_t mask()
 	{
 """ % b
-			
+
 		result = 0
 		for i in range(b):
 			if i > 0:
 				result <<= 1
 			result += 1
 		buf += "        return " + str(result) + "ULL;"
-		buf += """    
+		buf += """
     }
 };
 
