@@ -12,7 +12,7 @@ struct CreateMask<%d>
 {
 
     static inline uint64_t mask()
-	{
+    {
 """ % b
 
 		result = 0
