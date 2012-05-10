@@ -227,7 +227,6 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
 {
     // First get the initial values
     data_t pos = _getPos(index);
-    data_t mask = 0;
 
     // Running values for the loop
     data_t currentValue;
@@ -259,7 +258,7 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
         } else {
 
             offset = B - bounds;
-            mask = global_bit_masks[offset];
+            data_t mask = global_bit_masks[offset];
             currentValue |= (mask & _data[++pos]) << bounds;
 
             // Assign new block
