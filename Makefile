@@ -21,7 +21,7 @@ profile:
 papi:
 	g++ -O3 -o $(BUILD_DIR)/main_opt main.cpp -g2 -DNDEBUG -lpapi -DUSE_PAPI_TRACE -lpthread
 
-test:
+test: all
 	./$(BUILD_DIR)/main_opt 1000000
 	./$(BUILD_DIR)/main_opt 10000000
 	./$(BUILD_DIR)/main_opt 100000000
