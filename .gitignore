@@ -6,3 +6,4 @@ main
 main.s
 mask.h
 bcv.pdf
+*.pyc
