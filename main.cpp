@@ -13,6 +13,16 @@
 #include <tmmintrin.h>
 #include <smmintrin.h>
 
+
+#define VEC_LENGTH 100000000 / (128/8)
+union Vec128 {
+    __m128i v;
+    unsigned char c[16];
+};
+
+Vec128 data[VEC_LENGTH];
+
+
 void pshufb_test(long SIZE)
 {
     __m128i input, mask;
@@ -324,6 +334,37 @@ void performance(size_t size)
     t.stop();
     std::cout << res << " mget fixed 2 time " << (d = t.elapsed_time()) << std::endl;
     free(tmp);
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    res = 0;
+    for (int i = 0; i < size; i++)
+    {
+        data[i/16].c[i%16] = i % (1UL << BITS);
+    }
+    t.start();
+    for(size_t i = 0; i < size; i+=16)
+    {
+        __m128i vec = data[i / (128/8)].v;
+        res += _mm_extract_epi8(vec, 0);
+        res += _mm_extract_epi8(vec, 1);
+        res += _mm_extract_epi8(vec, 2);
+        res += _mm_extract_epi8(vec, 3);
+        res += _mm_extract_epi8(vec, 4);
+        res += _mm_extract_epi8(vec, 5);
+        res += _mm_extract_epi8(vec, 6);
+        res += _mm_extract_epi8(vec, 7);
+        res += _mm_extract_epi8(vec, 8);
+        res += _mm_extract_epi8(vec, 9);
+        res += _mm_extract_epi8(vec, 10);
+        res += _mm_extract_epi8(vec, 11);
+        res += _mm_extract_epi8(vec, 12);
+        res += _mm_extract_epi8(vec, 13);
+        res += _mm_extract_epi8(vec, 14);
+        res += _mm_extract_epi8(vec, 15);
+    }
+    t.stop();
+    std::cout << res << " __m128 time " << (b = t.elapsed_time()) << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////
     res = 0;
