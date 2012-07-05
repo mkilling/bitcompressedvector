@@ -32,16 +32,6 @@
 #endif
 
 
-template<unsigned char E>
-inline void initialize_masks(__m128i *masks, size_t width);
-
-template<>
-inline void initialize_masks<8>(__m128i *masks, size_t width) {
-    for (int i = 0; i < width / 8; i++)
-        masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i);
-}
-
-
 BUILD_MASK_HEADER;
 /*
 
@@ -67,8 +57,6 @@ public:
     */
     BitCompressedVector(size_t size) : _reserved(size)
     {
-        //_data_size = _getHigherPowerOfTwo(B);
-        //_data_per_block = _width / _data_size;
         _allocated_blocks = (size * _data_size) / (sizeof(data_t) * 8);
         posix_memalign((void**)&_data, 128, _allocated_blocks * sizeof(data_t));
         for (int i = 0; i < _allocated_blocks; ++i)
@@ -78,20 +66,20 @@ public:
         switch (_data_size)
         {
         case 8:
-            for (int i = 0; i < _width / 8; i++)
+            for (int i = 0; i < _data_per_block; i++)
                _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i);
             break;
         case 16:
-            for (int i = 0; i < _width / 16; i++)
-               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i+1, i);
+            for (int i = 0; i < _data_per_block; i++)
+               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i*2+1, i*2);
             break;
         case 32:
-            for (int i = 0; i < _width / 32; i++)
-               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i+3, i+2, i+1, i);
+            for (int i = 0; i < _data_per_block; i++)
+               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i*4+3, i*4+2, i*4+1, i*4);
             break;
         case 64:
-            for (int i = 0; i < _width / 64; i++)
-               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i+7, i+6, i+5, i+4, i+3, i+2, i+1, i);
+            for (int i = 0; i < _data_per_block; i++)
+               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i*4+7, i*4+6, i*4+5, i*4+4, i*4+3, i*4+2, i*4+1, i*4);
             break;
         }
     }
