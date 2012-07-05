@@ -79,7 +79,7 @@ public:
             break;
         case 64:
             for (int i = 0; i < _data_per_block; i++)
-               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i*4+7, i*4+6, i*4+5, i*4+4, i*4+3, i*4+2, i*4+1, i*4);
+               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i*8+7, i*8+6, i*8+5, i*8+4, i*8+3, i*8+2, i*8+1, i*8);
             break;
         }
     }
