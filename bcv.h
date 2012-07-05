@@ -63,7 +63,8 @@ public:
             _data[i] = _mm_setzero_si128();
         //memset(_data, 0, _allocated_blocks * sizeof(data_t));
 
-
+        for (int i = 0; i < 16; i++)
+            _masks[i] = _mm_set_epi8(0x80 + i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     ~BitCompressedVector()
@@ -162,6 +163,8 @@ private:
     size_t _reserved;
 
     size_t _allocated_blocks;
+
+    __m128i _masks[16];
 
     // get the position of an index inside the list of data values
     inline size_t _getPos(size_t index) const
@@ -385,65 +388,9 @@ typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(co
     return result;
     */
 
-
-    unsigned char ret;
-
     size_t pos = _getPos(index);
     size_t offset = _getOffset(index, pos * _width);
-
-    __m128i val = _data[pos];
-
-    switch (offset / 8)
-    {
-        case 0:
-            ret = (unsigned char) _mm_extract_epi8(val, 0);
-            break;
-        case 1:
-            ret = (unsigned char) _mm_extract_epi8(val, 1);
-            break;
-        case 2:
-            ret = (unsigned char) _mm_extract_epi8(val, 2);
-            break;
-        case 3:
-            ret = (unsigned char) _mm_extract_epi8(val, 3);
-            break;
-        case 4:
-            ret = (unsigned char) _mm_extract_epi8(val, 4);
-            break;
-        case 5:
-            ret = (unsigned char) _mm_extract_epi8(val, 5);
-            break;
-        case 6:
-            ret = (unsigned char) _mm_extract_epi8(val, 6);
-            break;
-        case 7:
-            ret = (unsigned char) _mm_extract_epi8(val, 7);
-            break;
-        case 8:
-            ret = (unsigned char) _mm_extract_epi8(val, 8);
-            break;
-        case 9:
-            ret = (unsigned char) _mm_extract_epi8(val, 9);
-            break;
-        case 10:
-            ret = (unsigned char) _mm_extract_epi8(val, 10);
-            break;
-        case 11:
-            ret = (unsigned char) _mm_extract_epi8(val, 11);
-            break;
-        case 12:
-            ret = (unsigned char) _mm_extract_epi8(val, 12);
-            break;
-        case 13:
-            ret = (unsigned char) _mm_extract_epi8(val, 13);
-            break;
-        case 14:
-            ret = (unsigned char) _mm_extract_epi8(val, 14);
-            break;
-        case 15:
-            ret = (unsigned char) _mm_extract_epi8(val, 15);
-            break;
-    }
-
-    return ret;
+    __m128i tmp = _data[pos];
+    __m128i ret = _mm_shuffle_epi8(tmp, _masks[offset / 8]);
+    return (unsigned char)_mm_extract_epi8(ret, 0);
 }
