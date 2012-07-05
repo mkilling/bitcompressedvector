@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 
-#define BITS 5
+#define BITS 15
 
 #include <emmintrin.h>
 #include <tmmintrin.h>
@@ -160,7 +160,7 @@ void performance(size_t size)
     t.start();
     for(size_t i=0; i < size; i+=1)
     {
-        //printf("%d\n", v.get(i));
+        printf("%d\n", v.get(i));
         res += v.get(i);
     }
     t.stop();

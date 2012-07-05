@@ -32,6 +32,15 @@
 #endif
 
 
+template<unsigned char E>
+inline void initialize_masks(__m128i *masks, size_t width);
+
+template<>
+inline void initialize_masks<8>(__m128i *masks, size_t width) {
+    for (int i = 0; i < width / 8; i++)
+        masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i);
+}
+
 
 BUILD_MASK_HEADER;
 /*
@@ -66,8 +75,25 @@ public:
             _data[i] = _mm_setzero_si128();
 
         posix_memalign((void**)&_masks, 128, _data_per_block * sizeof(data_t));
-        for (int i = 0; i < _width / _data_size; i++)
-            _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i);
+        switch (_data_size)
+        {
+        case 8:
+            for (int i = 0; i < _width / 8; i++)
+               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i);
+            break;
+        case 16:
+            for (int i = 0; i < _width / 16; i++)
+               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i+1, i);
+            break;
+        case 32:
+            for (int i = 0; i < _width / 32; i++)
+               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i+3, i+2, i+1, i);
+            break;
+        case 64:
+            for (int i = 0; i < _width / 64; i++)
+               _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i+7, i+6, i+5, i+4, i+3, i+2, i+1, i);
+            break;
+        }
     }
 
     ~BitCompressedVector()
@@ -207,23 +233,51 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
     size_t pos = _getPos(index);
     __m128i val = _data[pos];
 
-    data[0] = (unsigned char)_mm_extract_epi8(val, 0);
-    data[1] = (unsigned char)_mm_extract_epi8(val, 1);
-    data[2] = (unsigned char)_mm_extract_epi8(val, 2);
-    data[3] = (unsigned char)_mm_extract_epi8(val, 3);
-    data[4] = (unsigned char)_mm_extract_epi8(val, 4);
-    data[5] = (unsigned char)_mm_extract_epi8(val, 5);
-    data[6] = (unsigned char)_mm_extract_epi8(val, 6);
-    data[7] = (unsigned char)_mm_extract_epi8(val, 7);
-    data[8] = (unsigned char)_mm_extract_epi8(val, 8);
-    data[9] = (unsigned char)_mm_extract_epi8(val, 9);
-    data[10] = (unsigned char)_mm_extract_epi8(val, 10);
-    data[11] = (unsigned char)_mm_extract_epi8(val, 11);
-    data[12] = (unsigned char)_mm_extract_epi8(val, 12);
-    data[13] = (unsigned char)_mm_extract_epi8(val, 13);
-    data[14] = (unsigned char)_mm_extract_epi8(val, 14);
-    data[15] = (unsigned char)_mm_extract_epi8(val, 15);
-    *actual = std::min(16UL, _reserved - index);
+
+    switch (_data_size)
+    {
+    case 8:
+        data[0] = (unsigned char)_mm_extract_epi8(val, 0);
+        data[1] = (unsigned char)_mm_extract_epi8(val, 1);
+        data[2] = (unsigned char)_mm_extract_epi8(val, 2);
+        data[3] = (unsigned char)_mm_extract_epi8(val, 3);
+        data[4] = (unsigned char)_mm_extract_epi8(val, 4);
+        data[5] = (unsigned char)_mm_extract_epi8(val, 5);
+        data[6] = (unsigned char)_mm_extract_epi8(val, 6);
+        data[7] = (unsigned char)_mm_extract_epi8(val, 7);
+        data[8] = (unsigned char)_mm_extract_epi8(val, 8);
+        data[9] = (unsigned char)_mm_extract_epi8(val, 9);
+        data[10] = (unsigned char)_mm_extract_epi8(val, 10);
+        data[11] = (unsigned char)_mm_extract_epi8(val, 11);
+        data[12] = (unsigned char)_mm_extract_epi8(val, 12);
+        data[13] = (unsigned char)_mm_extract_epi8(val, 13);
+        data[14] = (unsigned char)_mm_extract_epi8(val, 14);
+        data[15] = (unsigned char)_mm_extract_epi8(val, 15);
+        break;
+    case 16:
+        data[0] = (unsigned short)_mm_extract_epi16(val, 0);
+        data[1] = (unsigned short)_mm_extract_epi16(val, 1);
+        data[2] = (unsigned short)_mm_extract_epi16(val, 2);
+        data[3] = (unsigned short)_mm_extract_epi16(val, 3);
+        data[4] = (unsigned short)_mm_extract_epi16(val, 4);
+        data[5] = (unsigned short)_mm_extract_epi16(val, 5);
+        data[6] = (unsigned short)_mm_extract_epi16(val, 6);
+        data[7] = (unsigned short)_mm_extract_epi16(val, 7);
+        break;
+    case 32:
+        data[0] = (unsigned int)_mm_extract_epi32(val, 0);
+        data[1] = (unsigned int)_mm_extract_epi32(val, 1);
+        data[2] = (unsigned int)_mm_extract_epi32(val, 2);
+        data[3] = (unsigned int)_mm_extract_epi32(val, 3);
+        break;
+    case 64:
+        data[0] = (unsigned long long)_mm_extract_epi64(val, 0);
+        data[1] = (unsigned long long)_mm_extract_epi64(val, 1);
+        break;
+    }
+
+    size_t tmp = _data_per_block;
+    *actual = std::min(tmp, _reserved - index);
 }
 
 template<typename T, uint8_t B>
@@ -232,8 +286,11 @@ void BitCompressedVector<T, B>::set(const size_t index, const value_type v)
     size_t pos = _getPos(index);
     size_t offset = _getOffset(index, pos * _width);
 
-    switch (offset / _data_size)
+
+    if (_data_size == 8)
     {
+        switch (offset / _data_size)
+        {
         case 0:
             _data[pos] = _mm_insert_epi8(_data[pos], v, 0);
             break;
@@ -282,6 +339,67 @@ void BitCompressedVector<T, B>::set(const size_t index, const value_type v)
         case 15:
             _data[pos] = _mm_insert_epi8(_data[pos], v, 15);
             break;
+        }
+    }
+    else if (_data_size == 16)
+    {
+        switch (offset / _data_size)
+        {
+        case 0:
+            _data[pos] = _mm_insert_epi16(_data[pos], v, 0);
+            break;
+        case 1:
+            _data[pos] = _mm_insert_epi16(_data[pos], v, 1);
+            break;
+        case 2:
+            _data[pos] = _mm_insert_epi16(_data[pos], v, 2);
+            break;
+        case 3:
+            _data[pos] = _mm_insert_epi16(_data[pos], v, 3);
+            break;
+        case 4:
+            _data[pos] = _mm_insert_epi16(_data[pos], v, 4);
+            break;
+        case 5:
+            _data[pos] = _mm_insert_epi16(_data[pos], v, 5);
+            break;
+        case 6:
+            _data[pos] = _mm_insert_epi16(_data[pos], v, 6);
+            break;
+        case 7:
+            _data[pos] = _mm_insert_epi16(_data[pos], v, 7);
+            break;
+        }
+    }
+    else if (_data_size == 32)
+    {
+        switch (offset / _data_size)
+        {
+        case 0:
+            _data[pos] = _mm_insert_epi32(_data[pos], v, 0);
+            break;
+        case 1:
+            _data[pos] = _mm_insert_epi32(_data[pos], v, 1);
+            break;
+        case 2:
+            _data[pos] = _mm_insert_epi32(_data[pos], v, 2);
+            break;
+        case 3:
+            _data[pos] = _mm_insert_epi32(_data[pos], v, 3);
+            break;
+        }
+    }
+    else if (_data_size == 64)
+    {
+        switch (offset / _data_size)
+        {
+        case 0:
+            _data[pos] = _mm_insert_epi64(_data[pos], v, 0);
+            break;
+        case 1:
+            _data[pos] = _mm_insert_epi64(_data[pos], v, 1);
+            break;
+        }
     }
 }
 
@@ -291,5 +409,5 @@ typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(co
     size_t pos = _getPos(index);
     size_t offset = _getOffset(index, pos * _width);
     __m128i ret = _mm_shuffle_epi8(_data[pos], _masks[offset / _data_size]);
-    return (unsigned char)_mm_extract_epi8(ret, 0);
+    return (T)_mm_extract_epi64(ret, 0);
 }
