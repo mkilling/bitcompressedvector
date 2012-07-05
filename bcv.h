@@ -386,6 +386,64 @@ typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(co
     */
 
 
+    unsigned char ret;
 
-    return 0;
+    size_t pos = _getPos(index);
+    size_t offset = _getOffset(index, pos * _width);
+
+    __m128i val = _data[pos];
+
+    switch (offset / 8)
+    {
+        case 0:
+            ret = (unsigned char) _mm_extract_epi8(val, 0);
+            break;
+        case 1:
+            ret = (unsigned char) _mm_extract_epi8(val, 1);
+            break;
+        case 2:
+            ret = (unsigned char) _mm_extract_epi8(val, 2);
+            break;
+        case 3:
+            ret = (unsigned char) _mm_extract_epi8(val, 3);
+            break;
+        case 4:
+            ret = (unsigned char) _mm_extract_epi8(val, 4);
+            break;
+        case 5:
+            ret = (unsigned char) _mm_extract_epi8(val, 5);
+            break;
+        case 6:
+            ret = (unsigned char) _mm_extract_epi8(val, 6);
+            break;
+        case 7:
+            ret = (unsigned char) _mm_extract_epi8(val, 7);
+            break;
+        case 8:
+            ret = (unsigned char) _mm_extract_epi8(val, 8);
+            break;
+        case 9:
+            ret = (unsigned char) _mm_extract_epi8(val, 9);
+            break;
+        case 10:
+            ret = (unsigned char) _mm_extract_epi8(val, 10);
+            break;
+        case 11:
+            ret = (unsigned char) _mm_extract_epi8(val, 11);
+            break;
+        case 12:
+            ret = (unsigned char) _mm_extract_epi8(val, 12);
+            break;
+        case 13:
+            ret = (unsigned char) _mm_extract_epi8(val, 13);
+            break;
+        case 14:
+            ret = (unsigned char) _mm_extract_epi8(val, 14);
+            break;
+        case 15:
+            ret = (unsigned char) _mm_extract_epi8(val, 15);
+            break;
+    }
+
+    return ret;
 }
