@@ -60,7 +60,7 @@ public:
     {
         //_data_size = _getHigherPowerOfTwo(B);
         //_data_per_block = _width / _data_size;
-        _allocated_blocks = (size * _data_size) / (sizeof(data_t) * 8) + 1;
+        _allocated_blocks = (size * _data_size) / (sizeof(data_t) * 8);
         posix_memalign((void**)&_data, 128, _allocated_blocks * sizeof(data_t));
         for (int i = 0; i < _allocated_blocks; ++i)
             _data[i] = _mm_setzero_si128();
@@ -201,7 +201,6 @@ private:
 
 #define BRANCH_FREE_LT(x,y) (((x & ~y) | ((~(x ^ y)) & x - y)) >>  63)
 
-
 template<typename T, uint8_t B>
 void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, size_t *actual) const
 {
@@ -224,7 +223,7 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
     data[13] = (unsigned char)_mm_extract_epi8(val, 13);
     data[14] = (unsigned char)_mm_extract_epi8(val, 14);
     data[15] = (unsigned char)_mm_extract_epi8(val, 15);
-    *actual = 16;
+    *actual = std::min(16UL, _reserved - index);
 }
 
 template<typename T, uint8_t B>
