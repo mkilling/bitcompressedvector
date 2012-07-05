@@ -170,7 +170,7 @@ private:
     data_t *_data;
 
     // this should be determined at compile time
-    static const size_t _data_size = data_size<B>::value;
+    static const size_t _data_size = suitable_vector_size<B>::value;
 
     static const size_t _data_per_block = _width / _data_size;
 
