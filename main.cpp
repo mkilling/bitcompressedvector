@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 
-#define BITS 5
+#define BITS 8
 
 #include <emmintrin.h>
 #include <tmmintrin.h>
@@ -122,12 +122,12 @@ void test_mget(long SIZE)
         sum += a;
     }
 
-    size_t alloca = ((64 / BITS)+1) * 8;
+    size_t alloca = 16;
     int *tmp = (int*) malloc(sizeof(int) * alloca);
 
     for(size_t i=0; i < SIZE; )
     {
-        size_t actual = 0;
+        size_t actual;
         v.mget(i, (int*) tmp, &actual);
         for(size_t j=0; j < actual; ++j, ++i)
         {
@@ -187,7 +187,7 @@ void performance(size_t size)
 
     ///////////////////////////////////////////////////////////////////////////
     res = 0;
-    size_t alloca = ((64 / BITS)+1) * 8;
+    size_t alloca = 16;
     int *tmp = (int*) malloc(sizeof(int) * alloca);
 
     size_t actual;
@@ -195,10 +195,12 @@ void performance(size_t size)
     //int flags = PapiTracer::start();
     for(size_t i=0; i < size; )
     {
-        actual = 0;
         v.mget(i, tmp, &actual);
         for(size_t j=0; j < actual; ++j)
+        {
+            //printf("%d\n", tmp[j]);
             res += tmp[j];
+        }
 
         i += actual;
 
