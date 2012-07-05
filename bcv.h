@@ -3,6 +3,8 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <cmath>
+#include <algorithm>
 
 #include "bcv_defines.h"
 #include "mask.h"
@@ -56,11 +58,15 @@ public:
     */
     BitCompressedVector(size_t size) : _reserved(size)
     {
-        _allocated_blocks = (size * B) / (sizeof(data_t) * 8) + 1;
+        //_data_size = _getHigherPowerOfTwo(B);
+        //_data_per_block = _width / _data_size;
+        _allocated_blocks = (size * _data_size) / (sizeof(data_t) * 8) + 1;
         posix_memalign((void**)&_data, 128, _allocated_blocks * sizeof(data_t));
         for (int i = 0; i < _allocated_blocks; ++i)
             _data[i] = _mm_setzero_si128();
-        for (int i = 0; i < 16; i++)
+
+        posix_memalign((void**)&_masks, 128, _data_per_block * sizeof(data_t));
+        for (int i = 0; i < _width / _data_size; i++)
             _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i);
     }
 
@@ -155,37 +161,41 @@ private:
     // Pointer to the data
     data_t *_data;
 
-    size_t _data_size;
+    // this should be determined at compile time
+    static const size_t _data_size = data_size<B>::value;
+
+    static const size_t _data_per_block = _width / _data_size;
 
     size_t _reserved;
 
     size_t _allocated_blocks;
 
-    __m128i _masks[16];
+    __m128i *_masks;
 
     // get the position of an index inside the list of data values
     inline size_t _getPos(size_t index) const
     {
-        return (index * B) / _width;
+        return (index * _data_size) / _width;
     }
 
     // get the offset of an index inside a block
     inline size_t _getOffset(size_t index, size_t base) const
     {
-        return (index * B) - base;
+        return (index * _data_size) - base;
     }
 
     // returns the offset mask for any given index
     inline data_t buildMask(size_t index) const
     {
-        return (index * B) % _width;
+        return (index * _data_size) % _width;
     }
 
-    // inline size_t _getHigherPowerOfTwo(size_t data_size)
-    // {
-    //     double exponent = ceil(log(data_size, 2));
-    //     return (size_t)pow(2, exponent);
-    // }
+    inline size_t _getHigherPowerOfTwo(size_t data_size)
+    {
+        double exponent = ceil(log(data_size) / log(2));
+        double power = pow(2, exponent);
+        return (size_t)std::max(power, 8.0);
+    }
 
 };
 
@@ -198,22 +208,22 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
     size_t pos = _getPos(index);
     __m128i val = _data[pos];
 
-    data[0] = (unsigned char) _mm_extract_epi8(val, 0);
-    data[1] = (unsigned char) _mm_extract_epi8(val, 1);
-    data[2] = (unsigned char) _mm_extract_epi8(val, 2);
-    data[3] = (unsigned char) _mm_extract_epi8(val, 3);
-    data[4] = (unsigned char) _mm_extract_epi8(val, 4);
-    data[5] = (unsigned char) _mm_extract_epi8(val, 5);
-    data[6] = (unsigned char) _mm_extract_epi8(val, 6);
-    data[7] = (unsigned char) _mm_extract_epi8(val, 7);
-    data[8] = (unsigned char) _mm_extract_epi8(val, 8);
-    data[9] = (unsigned char) _mm_extract_epi8(val, 9);
-    data[10] = (unsigned char) _mm_extract_epi8(val, 10);
-    data[11] = (unsigned char) _mm_extract_epi8(val, 11);
-    data[12] = (unsigned char) _mm_extract_epi8(val, 12);
-    data[13] = (unsigned char) _mm_extract_epi8(val, 13);
-    data[14] = (unsigned char) _mm_extract_epi8(val, 14);
-    data[15] = (unsigned char) _mm_extract_epi8(val, 15);
+    data[0] = (unsigned char)_mm_extract_epi8(val, 0);
+    data[1] = (unsigned char)_mm_extract_epi8(val, 1);
+    data[2] = (unsigned char)_mm_extract_epi8(val, 2);
+    data[3] = (unsigned char)_mm_extract_epi8(val, 3);
+    data[4] = (unsigned char)_mm_extract_epi8(val, 4);
+    data[5] = (unsigned char)_mm_extract_epi8(val, 5);
+    data[6] = (unsigned char)_mm_extract_epi8(val, 6);
+    data[7] = (unsigned char)_mm_extract_epi8(val, 7);
+    data[8] = (unsigned char)_mm_extract_epi8(val, 8);
+    data[9] = (unsigned char)_mm_extract_epi8(val, 9);
+    data[10] = (unsigned char)_mm_extract_epi8(val, 10);
+    data[11] = (unsigned char)_mm_extract_epi8(val, 11);
+    data[12] = (unsigned char)_mm_extract_epi8(val, 12);
+    data[13] = (unsigned char)_mm_extract_epi8(val, 13);
+    data[14] = (unsigned char)_mm_extract_epi8(val, 14);
+    data[15] = (unsigned char)_mm_extract_epi8(val, 15);
     *actual = 16;
 }
 
@@ -223,7 +233,7 @@ void BitCompressedVector<T, B>::set(const size_t index, const value_type v)
     size_t pos = _getPos(index);
     size_t offset = _getOffset(index, pos * _width);
 
-    switch (offset / 8)
+    switch (offset / _data_size)
     {
         case 0:
             _data[pos] = _mm_insert_epi8(_data[pos], v, 0);
@@ -281,6 +291,6 @@ typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(co
 {
     size_t pos = _getPos(index);
     size_t offset = _getOffset(index, pos * _width);
-    __m128i ret = _mm_shuffle_epi8(_data[pos], _masks[offset / 8]);
+    __m128i ret = _mm_shuffle_epi8(_data[pos], _masks[offset / _data_size]);
     return (unsigned char)_mm_extract_epi8(ret, 0);
 }
