@@ -58,11 +58,8 @@ public:
     {
         _allocated_blocks = (size * B) / (sizeof(data_t) * 8) + 1;
         posix_memalign((void**)&_data, 128, _allocated_blocks * sizeof(data_t));
-        //printf("allocated: %u\n", _data);
         for (int i = 0; i < _allocated_blocks; ++i)
             _data[i] = _mm_setzero_si128();
-        //memset(_data, 0, _allocated_blocks * sizeof(data_t));
-
         for (int i = 0; i < 16; i++)
             _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i);
     }
@@ -198,60 +195,7 @@ private:
 template<typename T, uint8_t B>
 void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, size_t *actual) const
 {
-    /*
-    // First get the initial values
-    data_t pos = _getPos(index);
-
-    // Running values for the loop
-    data_t currentValue;
-    data_t offset = _getOffset(index, pos * _width);
-    data_t bounds = _width - offset;
-
-    // Base Mask
-    data_t baseMask = global_bit_masks[B];
-
-    // Align the block according to the offset
-    data_t block = _data[pos] >>  offset;
-
-    size_t left = (_num_blocks * _width) / B;
-    size_t current = (pos * _width + offset) / B;
-    size_t upper = left < (_reserved - current) ? left : _reserved - current;
-
-    size_t counter = 0;
-    for( ; counter < upper; ++counter)
-    {
-
-        // Extract the value
-        currentValue = (baseMask & block);
-
-        if (bounds > B)
-        {
-            bounds -= B;
-            block >>= B;
-
-        } else {
-
-            offset = B - bounds;
-            data_t mask = global_bit_masks[offset];
-            currentValue |= (mask & _data[++pos]) << bounds;
-
-            // Assign new block
-            block = _data[pos] >> offset;
-            bounds = _width - offset;
-        }
-
-        // Append current value
-        data[counter] = currentValue;
-    }
-
-    *actual = counter;
-    */
     size_t pos = _getPos(index);
-
-    // this does not work because offset needs to be an immediate
-    // size_t offset = _getOffset(index, pos * _width);
-    // __m128i val = _mm_alignr_epi8 (_data[pos], _data[pos+1], offset);
-
     __m128i val = _data[pos];
 
     data[0] = (unsigned char) _mm_extract_epi8(val, 0);
@@ -276,31 +220,9 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
 template<typename T, uint8_t B>
 void BitCompressedVector<T, B>::set(const size_t index, const value_type v)
 {
-    /*
-    data_t pos = _getPos(index);
-    data_t offset = _getOffset(index, pos * _width);
-    data_t bounds = _width - offset;
-
-    data_t mask, baseMask;
-    baseMask = global_bit_masks[B];
-    mask = ~(baseMask << offset);
-
-
-    _data[pos] &= mask;
-    _data[pos] = _data[pos] | ((data_t) v << offset);
-
-    if (bounds < B)
-    {
-        mask = ~(baseMask << offset); // we have a an overflow here thatswhy we do not need to care about the original stuff
-
-       _data[pos + 1] &= mask; // clear bits
-       _data[pos + 1] |= v >> bounds; // set bits and shift by the number of bits we already inserted
-    }
-    */
-
     size_t pos = _getPos(index);
     size_t offset = _getOffset(index, pos * _width);
-    //printf("offset: %d\n", offset);
+
     switch (offset / 8)
     {
         case 0:
@@ -351,56 +273,14 @@ void BitCompressedVector<T, B>::set(const size_t index, const value_type v)
         case 15:
             _data[pos] = _mm_insert_epi8(_data[pos], v, 15);
             break;
-
     }
-    //_data[pos] = _mm_set_epi8(v, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    //__m128i mask = 0x00;
-    //__m128i shiftedVal = _mm_shuffle_epi8(val, mask);
-    // printf("&data: %u \n", _data);
-    // printf("pos: %d, %u\n", pos, &_data[pos]);
-    //_mm_storeu_si128(&_data[pos], val);
 }
 
 template<typename T, uint8_t B>
 typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(const size_t index) const
 {
-    /*
-    value_type result;
-    data_t mask;
-
-    data_t pos = _getPos(index);
-    data_t offset = _getOffset(index, pos * _width);
-    data_t bounds = _width - offset; // This is almost static expression, that could be handled with a switch case
-
-    mask = global_bit_masks[B];
-    data_t block = _data[pos];
-    block >>= offset;
-
-    result = (mask & block);
-
-    if (bounds < B)
-    {
-        data_t b = B - bounds;
-        mask = global_bit_masks[b];
-
-        result |= (mask & _data[pos + 1]) << bounds;
-    }
-    return result;
-    */
-
     size_t pos = _getPos(index);
     size_t offset = _getOffset(index, pos * _width);
-    //__m128i tmp = _data[pos];
-    //__m128i tmp =  _mm_stream_load_si128(&_data[pos]);
-    //__m128i tmp = _mm_loadu_si128 (&_data[pos]);
-    //__m128i before = _mm_stream_load_si128(&_data[pos]);
-    //printf("index: %d\n", offset / 8);
     __m128i ret = _mm_shuffle_epi8(_data[pos], _masks[offset / 8]);
-    //__m128i after = _mm_stream_load_si128(&_data[pos]);
-    //__m128i eq = _mm_cmpeq_epi8(before, after);
-    // if (_mm_test_all_ones(eq)) {
-    //     printf("they're equal\n");
-    // }
     return (unsigned char)_mm_extract_epi8(ret, 0);
-    //return 0;
 }
