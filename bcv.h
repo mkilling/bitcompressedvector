@@ -64,7 +64,7 @@ public:
         //memset(_data, 0, _allocated_blocks * sizeof(data_t));
 
         for (int i = 0; i < 16; i++)
-            _masks[i] = _mm_set_epi8(0x80 + i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            _masks[i] = _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, i);
     }
 
     ~BitCompressedVector()
@@ -304,52 +304,52 @@ void BitCompressedVector<T, B>::set(const size_t index, const value_type v)
     switch (offset / 8)
     {
         case 0:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 0);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 0);
             break;
         case 1:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 1);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 1);
             break;
         case 2:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 2);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 2);
             break;
         case 3:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 3);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 3);
             break;
         case 4:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 4);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 4);
             break;
         case 5:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 5);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 5);
             break;
         case 6:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 6);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 6);
             break;
         case 7:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 7);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 7);
             break;
         case 8:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 8);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 8);
             break;
         case 9:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 9);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 9);
             break;
         case 10:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 10);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 10);
             break;
         case 11:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 11);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 11);
             break;
         case 12:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 12);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 12);
             break;
         case 13:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 13);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 13);
             break;
         case 14:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 14);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 14);
             break;
         case 15:
-            _data[pos] = _mm_insert_epi8 (_data[pos], v, 15);
+            _data[pos] = _mm_insert_epi8(_data[pos], v, 15);
             break;
 
     }
@@ -390,7 +390,17 @@ typename BitCompressedVector<T, B>::value_type BitCompressedVector<T, B>::get(co
 
     size_t pos = _getPos(index);
     size_t offset = _getOffset(index, pos * _width);
-    __m128i tmp = _data[pos];
-    __m128i ret = _mm_shuffle_epi8(tmp, _masks[offset / 8]);
+    //__m128i tmp = _data[pos];
+    //__m128i tmp =  _mm_stream_load_si128(&_data[pos]);
+    //__m128i tmp = _mm_loadu_si128 (&_data[pos]);
+    //__m128i before = _mm_stream_load_si128(&_data[pos]);
+    //printf("index: %d\n", offset / 8);
+    __m128i ret = _mm_shuffle_epi8(_data[pos], _masks[offset / 8]);
+    //__m128i after = _mm_stream_load_si128(&_data[pos]);
+    //__m128i eq = _mm_cmpeq_epi8(before, after);
+    // if (_mm_test_all_ones(eq)) {
+    //     printf("they're equal\n");
+    // }
     return (unsigned char)_mm_extract_epi8(ret, 0);
+    //return 0;
 }

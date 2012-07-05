@@ -169,6 +169,7 @@ void performance(size_t size)
     t.start();
     for(size_t i=0; i < size; i+=1)
     {
+        //printf("%d\n", v.get(i));
         res += v.get(i);
     }
     t.stop();
