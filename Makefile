@@ -4,14 +4,10 @@ BUILD_DIR=build
 CC=g++
 CXXFLAGS= -g2  -mtune=native -mssse3 -msse4.1 -funroll-loops
 
-all: gen
+all:
 	mkdir -p $(BUILD_DIR)
 	$(CC) -o $(BUILD_DIR)/main main.cpp $(CXXFLAGS)
 	$(CC) -O3 -o $(BUILD_DIR)/main_opt main.cpp -g2 -DNDEBUG $(CXXFLAGS)
-
-gen:
-	cat mask_tpl.h > mask.h
-	python generate.py >> mask.h
 
 profile:
 	$(CC) -O3 -o $(BUILD_DIR)/main_opt main.cpp -g2 -msse4.1 -DNDEBUG -lprofiler
@@ -26,7 +22,7 @@ test: all
 	./$(BUILD_DIR)/main_opt 10000000
 	./$(BUILD_DIR)/main_opt 100000000
 
-release: gen
+release:
 	$(RM) -Rf pkg/bcv
 	mkdir -p pkg/bcv
 	cp bcv_defines.h pkg/bcv

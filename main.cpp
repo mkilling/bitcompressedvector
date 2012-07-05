@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 
-#define BITS 33
+#define BITS 34
 
 #include <emmintrin.h>
 #include <tmmintrin.h>
@@ -113,7 +113,7 @@ void test_mget(long SIZE)
         sum += a;
     }
 
-    size_t alloca = 16;
+    size_t alloca = BitCompressedVector<int, BITS>::mget_array_size;
     int *tmp = (int*) malloc(sizeof(int) * alloca);
 
     for(size_t i=0; i < SIZE; )
@@ -179,7 +179,7 @@ void performance(size_t size)
 
     ///////////////////////////////////////////////////////////////////////////
     res = 0;
-    size_t alloca = 16;
+    size_t alloca = BitCompressedVector<int, BITS>::mget_array_size;;
     int *tmp = (int*) malloc(sizeof(int) * alloca);
 
     size_t actual;

@@ -7,7 +7,6 @@
 #include <algorithm>
 
 #include "bcv_defines.h"
-#include "mask.h"
 
 #include <stdint.h>
 #include <cstdio>
@@ -31,8 +30,6 @@
 
 #endif
 
-
-BUILD_MASK_HEADER;
 /*
 
  This class provides a numeric bit compressed vector.
@@ -155,9 +152,6 @@ public:
     }
 
 
-
-
-
 private:
 
 
@@ -198,22 +192,11 @@ private:
         return (index * _data_size) - base;
     }
 
-    // returns the offset mask for any given index
-    inline data_t buildMask(size_t index) const
-    {
-        return (index * _data_size) % _width;
-    }
 
-    inline size_t _getHigherPowerOfTwo(size_t data_size)
-    {
-        double exponent = ceil(log(data_size) / log(2));
-        double power = pow(2, exponent);
-        return (size_t)std::max(power, 8.0);
-    }
+public:
+    static const size_t mget_array_size = _data_per_block;
 
 };
-
-#define BRANCH_FREE_LT(x,y) (((x & ~y) | ((~(x ^ y)) & x - y)) >>  63)
 
 template<typename T, uint8_t B>
 void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, size_t *actual) const
@@ -225,42 +208,42 @@ void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, si
     switch (_data_size)
     {
     case 8:
-        data[0] = (unsigned char)_mm_extract_epi8(val, 0);
-        data[1] = (unsigned char)_mm_extract_epi8(val, 1);
-        data[2] = (unsigned char)_mm_extract_epi8(val, 2);
-        data[3] = (unsigned char)_mm_extract_epi8(val, 3);
-        data[4] = (unsigned char)_mm_extract_epi8(val, 4);
-        data[5] = (unsigned char)_mm_extract_epi8(val, 5);
-        data[6] = (unsigned char)_mm_extract_epi8(val, 6);
-        data[7] = (unsigned char)_mm_extract_epi8(val, 7);
-        data[8] = (unsigned char)_mm_extract_epi8(val, 8);
-        data[9] = (unsigned char)_mm_extract_epi8(val, 9);
-        data[10] = (unsigned char)_mm_extract_epi8(val, 10);
-        data[11] = (unsigned char)_mm_extract_epi8(val, 11);
-        data[12] = (unsigned char)_mm_extract_epi8(val, 12);
-        data[13] = (unsigned char)_mm_extract_epi8(val, 13);
-        data[14] = (unsigned char)_mm_extract_epi8(val, 14);
-        data[15] = (unsigned char)_mm_extract_epi8(val, 15);
+        data[0] = (T)_mm_extract_epi8(val, 0);
+        data[1] = (T)_mm_extract_epi8(val, 1);
+        data[2] = (T)_mm_extract_epi8(val, 2);
+        data[3] = (T)_mm_extract_epi8(val, 3);
+        data[4] = (T)_mm_extract_epi8(val, 4);
+        data[5] = (T)_mm_extract_epi8(val, 5);
+        data[6] = (T)_mm_extract_epi8(val, 6);
+        data[7] = (T)_mm_extract_epi8(val, 7);
+        data[8] = (T)_mm_extract_epi8(val, 8);
+        data[9] = (T)_mm_extract_epi8(val, 9);
+        data[10] = (T)_mm_extract_epi8(val, 10);
+        data[11] = (T)_mm_extract_epi8(val, 11);
+        data[12] = (T)_mm_extract_epi8(val, 12);
+        data[13] = (T)_mm_extract_epi8(val, 13);
+        data[14] = (T)_mm_extract_epi8(val, 14);
+        data[15] = (T)_mm_extract_epi8(val, 15);
         break;
     case 16:
-        data[0] = (unsigned short)_mm_extract_epi16(val, 0);
-        data[1] = (unsigned short)_mm_extract_epi16(val, 1);
-        data[2] = (unsigned short)_mm_extract_epi16(val, 2);
-        data[3] = (unsigned short)_mm_extract_epi16(val, 3);
-        data[4] = (unsigned short)_mm_extract_epi16(val, 4);
-        data[5] = (unsigned short)_mm_extract_epi16(val, 5);
-        data[6] = (unsigned short)_mm_extract_epi16(val, 6);
-        data[7] = (unsigned short)_mm_extract_epi16(val, 7);
+        data[0] = (T)_mm_extract_epi16(val, 0);
+        data[1] = (T)_mm_extract_epi16(val, 1);
+        data[2] = (T)_mm_extract_epi16(val, 2);
+        data[3] = (T)_mm_extract_epi16(val, 3);
+        data[4] = (T)_mm_extract_epi16(val, 4);
+        data[5] = (T)_mm_extract_epi16(val, 5);
+        data[6] = (T)_mm_extract_epi16(val, 6);
+        data[7] = (T)_mm_extract_epi16(val, 7);
         break;
     case 32:
-        data[0] = (unsigned int)_mm_extract_epi32(val, 0);
-        data[1] = (unsigned int)_mm_extract_epi32(val, 1);
-        data[2] = (unsigned int)_mm_extract_epi32(val, 2);
-        data[3] = (unsigned int)_mm_extract_epi32(val, 3);
+        data[0] = (T)_mm_extract_epi32(val, 0);
+        data[1] = (T)_mm_extract_epi32(val, 1);
+        data[2] = (T)_mm_extract_epi32(val, 2);
+        data[3] = (T)_mm_extract_epi32(val, 3);
         break;
     case 64:
-        data[0] = (unsigned long long)_mm_extract_epi64(val, 0);
-        data[1] = (unsigned long long)_mm_extract_epi64(val, 1);
+        data[0] = (T)_mm_extract_epi64(val, 0);
+        data[1] = (T)_mm_extract_epi64(val, 1);
         break;
     }
 
