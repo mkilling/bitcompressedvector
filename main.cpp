@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 
-#define BITS 34
+#define BITS 63
 
 #include <emmintrin.h>
 #include <tmmintrin.h>

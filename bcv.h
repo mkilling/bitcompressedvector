@@ -202,48 +202,46 @@ template<typename T, uint8_t B>
 void BitCompressedVector<T, B>::mget(const size_t index, value_type_ptr data, size_t *actual) const
 {
     size_t pos = _getPos(index);
-    __m128i val = _data[pos];
-
 
     switch (_data_size)
     {
     case 8:
-        data[0] = (T)_mm_extract_epi8(val, 0);
-        data[1] = (T)_mm_extract_epi8(val, 1);
-        data[2] = (T)_mm_extract_epi8(val, 2);
-        data[3] = (T)_mm_extract_epi8(val, 3);
-        data[4] = (T)_mm_extract_epi8(val, 4);
-        data[5] = (T)_mm_extract_epi8(val, 5);
-        data[6] = (T)_mm_extract_epi8(val, 6);
-        data[7] = (T)_mm_extract_epi8(val, 7);
-        data[8] = (T)_mm_extract_epi8(val, 8);
-        data[9] = (T)_mm_extract_epi8(val, 9);
-        data[10] = (T)_mm_extract_epi8(val, 10);
-        data[11] = (T)_mm_extract_epi8(val, 11);
-        data[12] = (T)_mm_extract_epi8(val, 12);
-        data[13] = (T)_mm_extract_epi8(val, 13);
-        data[14] = (T)_mm_extract_epi8(val, 14);
-        data[15] = (T)_mm_extract_epi8(val, 15);
+        data[0] = (T)_mm_extract_epi8(_data[pos], 0);
+        data[1] = (T)_mm_extract_epi8(_data[pos], 1);
+        data[2] = (T)_mm_extract_epi8(_data[pos], 2);
+        data[3] = (T)_mm_extract_epi8(_data[pos], 3);
+        data[4] = (T)_mm_extract_epi8(_data[pos], 4);
+        data[5] = (T)_mm_extract_epi8(_data[pos], 5);
+        data[6] = (T)_mm_extract_epi8(_data[pos], 6);
+        data[7] = (T)_mm_extract_epi8(_data[pos], 7);
+        data[8] = (T)_mm_extract_epi8(_data[pos], 8);
+        data[9] = (T)_mm_extract_epi8(_data[pos], 9);
+        data[10] = (T)_mm_extract_epi8(_data[pos], 10);
+        data[11] = (T)_mm_extract_epi8(_data[pos], 11);
+        data[12] = (T)_mm_extract_epi8(_data[pos], 12);
+        data[13] = (T)_mm_extract_epi8(_data[pos], 13);
+        data[14] = (T)_mm_extract_epi8(_data[pos], 14);
+        data[15] = (T)_mm_extract_epi8(_data[pos], 15);
         break;
     case 16:
-        data[0] = (T)_mm_extract_epi16(val, 0);
-        data[1] = (T)_mm_extract_epi16(val, 1);
-        data[2] = (T)_mm_extract_epi16(val, 2);
-        data[3] = (T)_mm_extract_epi16(val, 3);
-        data[4] = (T)_mm_extract_epi16(val, 4);
-        data[5] = (T)_mm_extract_epi16(val, 5);
-        data[6] = (T)_mm_extract_epi16(val, 6);
-        data[7] = (T)_mm_extract_epi16(val, 7);
+        data[0] = (T)_mm_extract_epi16(_data[pos], 0);
+        data[1] = (T)_mm_extract_epi16(_data[pos], 1);
+        data[2] = (T)_mm_extract_epi16(_data[pos], 2);
+        data[3] = (T)_mm_extract_epi16(_data[pos], 3);
+        data[4] = (T)_mm_extract_epi16(_data[pos], 4);
+        data[5] = (T)_mm_extract_epi16(_data[pos], 5);
+        data[6] = (T)_mm_extract_epi16(_data[pos], 6);
+        data[7] = (T)_mm_extract_epi16(_data[pos], 7);
         break;
     case 32:
-        data[0] = (T)_mm_extract_epi32(val, 0);
-        data[1] = (T)_mm_extract_epi32(val, 1);
-        data[2] = (T)_mm_extract_epi32(val, 2);
-        data[3] = (T)_mm_extract_epi32(val, 3);
+        data[0] = (T)_mm_extract_epi32(_data[pos], 0);
+        data[1] = (T)_mm_extract_epi32(_data[pos], 1);
+        data[2] = (T)_mm_extract_epi32(_data[pos], 2);
+        data[3] = (T)_mm_extract_epi32(_data[pos], 3);
         break;
     case 64:
-        data[0] = (T)_mm_extract_epi64(val, 0);
-        data[1] = (T)_mm_extract_epi64(val, 1);
+        data[0] = (T)_mm_extract_epi64(_data[pos], 0);
+        data[1] = (T)_mm_extract_epi64(_data[pos], 1);
         break;
     }
 
